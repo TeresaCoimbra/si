@@ -11,6 +11,10 @@ class TestUnlabeledDataset(unittest.TestCase):
     def testLen(self):
         self.assertGreater(len(self.dataset), 0)
 
+    # definir novo teste 
+    def testFeat(self):
+        self.assertGreater(self.dataset.getNumFeatures(), 0)
+
 
 class TestLabeledDataset(TestUnlabeledDataset):
 

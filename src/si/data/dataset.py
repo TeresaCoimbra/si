@@ -13,8 +13,8 @@ class Dataset:
             raise Exception("Trying to instanciate a DataSet without any data")
         self.X = X
         self.Y = Y
-        self._xnames = xnames if xnames else label_gen(X.shape[1])
-        self._yname = yname if yname else 'Y'
+        self.xnames = xnames if xnames else label_gen(X.shape[1])
+        self.yname = yname if yname else 'Y'
 
     @classmethod
     def from_data(cls, filename, sep=",", labeled=True):
@@ -47,19 +47,18 @@ class Dataset:
         :return: [description]
         :rtype: [type]
         """
-
-        if ylabel and ylabel in df.columns:
-            X = df.loc[:, df.columns != ylabel].to_numpy()
-            Y = df.loc[:, ylabel].to_numpy()
-            xnames = list(df.columns)
-            xnames.remove(ylabel)
-            yname = ylabel
-        else:
+        if ylabel is not None and ylabel in df.columns:    #verify is a label is given and if it exists
+            X = df.loc[:, df.columns != ylabel].to_numpy()        # generate df returning 
+            Y = df.loc[:, ylabel].to_numpy()   
+            xnames = df.columns.tolist()
+            ynames = ylabel
+        else: # read df and convert to numpy
             X = df.to_numpy()
             Y = None
-            xnames = list(df.columns)
-            yname = None
-        return cls(X, Y, xnames, yname)
+            xnames = df.columns.tolist()
+            ynames = None
+        return cls(X,Y,xnames,ynames)
+
 
     def __len__(self):
         """Returns the number of data points."""
@@ -67,6 +66,7 @@ class Dataset:
 
     def hasLabel(self):
         """Returns True if the dataset constains labels (a dependent variable)"""
+        # verify if there are Y
         return self.Y is not None
 
     def getNumFeatures(self):
@@ -75,7 +75,9 @@ class Dataset:
 
     def getNumClasses(self):
         """Returns the number of label classes or 0 if the dataset has no dependent variable."""
+        # count the number of different values in Y if they exist
         return len(np.unique(self.Y)) if self.hasLabel() else 0
+        #return np.unique(self.Y).size if self.hasLabel() else 0
 
     def writeDataset(self, filename, sep=","):
         """Saves the dataset to a file

@@ -27,9 +27,9 @@ class StandardScaler:
         ----------
         dataset : A Dataset object to be standardized
         """
-        X = dataset.X
-        self._mean = np.mean(X, axis=0)
-        self._var = np.var(X, axis=0)
+        self.mean = np.mean(dataset.X, axis = 0)
+        self.var = np.mvar(dataset.X, axis = 0)
+    
 
     def transform(self, dataset, inline=False):
         """
