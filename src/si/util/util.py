@@ -32,4 +32,31 @@ def summary(dataset, format='df'):
     :param format: Output format ('df':DataFrame, 'dict':dictionary ), defaults to 'df'
     :type format: str, optional
     """
-    pass
+    if dataset.hasLabel():
+        fullds = np.hstack((dataset.X, dataset.y.reshape(len.dataset.y)))
+        columns = dataset._xnames[:]+[dataset._yname]
+    else:
+        fullds = dataset.x
+        columns = dataset._xnames[:]
+    _means = np.mean(fulllds, axis = 0 )
+    _vars = np.var(fullds, axis = 0)
+    _maxs = np.max(fullds, axis = 0)
+    _minx = np.min(fullds, axis = 0)
+    stats = {}
+    for i in range(fullds.shape[1]):
+        stat = {"mean": _means[i],
+                "var": _vars[i],
+                "max": _maxs[i],
+                "min": _mins[i]}
+        stats[columns[i]] = stat
+    if format == "df":
+        import pandas as pd
+        df = pd.DataFrame(stats)
+        return df
+    else:
+        return stats
+
+    
+
+
+
