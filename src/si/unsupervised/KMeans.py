@@ -41,7 +41,9 @@ class KMeans:
         count = 0
         old_idxs= np.zeros(X.shape[0])
 
-        while changed or count < self.max_iter:
+        while changed and count < self.max_iter:
+            self.init_centroids
+            
             idxs = np.apply_along_axis(self.get_closest_centroid, axis=0, arr=X.T)
             cent = []
 
@@ -50,7 +52,6 @@ class KMeans:
             
             self.centroids = np.array(cent)
             
-           
             changed = np.all(old_idxs==idxs)
             old_idxs = idxs
             count += 1
