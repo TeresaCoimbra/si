@@ -29,8 +29,8 @@ class Dataset:
         """
         data = np.genfromtxt(filename, delimiter=sep)
         if labeled:
-            X = data[:, 0:-1]
-            Y = data[:, -1]
+            X = data[:, 0:-1]  # selects all lines and all columns except the last one
+            Y = data[:, -1]    # last column
         else:
             X = data
             Y = None
@@ -51,13 +51,13 @@ class Dataset:
             X = df.loc[:, df.columns != ylabel].to_numpy()        # generate df returning 
             Y = df.loc[:, ylabel].to_numpy()   
             xnames = df.columns.tolist()
-            ynames = ylabel
+            yname = ylabel
         else: # read df and convert to numpy
             X = df.to_numpy()
             Y = None
             xnames = df.columns.tolist()
-            ynames = None
-        return cls(X,Y,xnames,ynames)
+            yname = None
+        return cls(X,Y,xnames,yname)
 
 
     def __len__(self):
@@ -95,10 +95,10 @@ class Dataset:
         import pandas as pd
         if self.Y is not None:
             fullds = np.hstack((self.X, self.Y.reshape(len(self.Y), 1)))
-            columns = self._xnames[:]+[self._yname]
+            columns = self.xnames[:]+[self.yname]
         else:
             fullds = self.X.copy()
-            columns = self._xnames[:]
+            columns = self.xnames[:]
         return pd.DataFrame(fullds, columns=columns)
 
     def getXy(self):

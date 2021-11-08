@@ -18,6 +18,8 @@ class StandardScaler:
     _var : numpy array of shape (n_features, )
         The variance of each feature in the training set.
     """
+    def __init__(self):
+        pass
 
     def fit(self, dataset):
         """
@@ -27,8 +29,8 @@ class StandardScaler:
         ----------
         dataset : A Dataset object to be standardized
         """
-        self.mean = np.mean(dataset.X, axis = 0)
-        self.var = np.mvar(dataset.X, axis = 0)
+        self._mean = np.mean(dataset.X, axis = 0)
+        self._var = np.var(dataset.X, axis = 0)
     
 
     def transform(self, dataset, inline=False):
@@ -43,7 +45,7 @@ class StandardScaler:
         A Dataset object with standardized data.
         """
         X = dataset.X
-        Z = (X - self.mean) / np.sqrt(self.var)
+        Z = (X - self._mean) / np.sqrt(self._var)
 
         if inline:
             dataset.X = Z
@@ -52,8 +54,8 @@ class StandardScaler:
             from ..data import Dataset
             return Dataset(Z,
                            copy(dataset.Y),
-                           copy(dataset._xnames),
-                           copy(dataset._yname))
+                           copy(dataset.xnames),
+                           copy(dataset.yname))
 
     def fit_transform(self, dataset, inline=False):
         """
@@ -83,7 +85,7 @@ class StandardScaler:
         -------
         Dataset object
         """
-        X = dataset.X * np.sqrt(self.var) + self.mean
+        X = dataset.X * np.sqrt(self._var) + self._mean
         if inline:
             dataset.X = X
             return dataset
@@ -91,5 +93,5 @@ class StandardScaler:
             from ..data import Dataset
             return Dataset(X,
                            copy(dataset.Y),
-                           copy(dataset._xnames),
-                           copy(dataset._yname))
+                           copy(dataset.xnames),
+                           copy(dataset.yname))

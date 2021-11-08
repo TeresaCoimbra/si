@@ -1,7 +1,10 @@
 import numpy as np
 import scipy as stats
+import warnings
+from si.data import Dataset
+from copy import copy
 
-class VarianceTreshold
+class VarianceTreshold:
 
     def __init__(self, treshold=0):
         """
@@ -9,7 +12,8 @@ class VarianceTreshold
         :param treshold: non negative treshold value
         """
         if treshold < 0:
-            warning.warn("The treshold must be a non-negative value")
+            warnings.warn("The treshold must be a non-negative value")
+            threshold = 0
         self.treshold = treshold
 
     def fit(self, dataset):
@@ -25,28 +29,24 @@ class VarianceTreshold
         Deletes features with var <= treshold
         '''
         X = dataset.X
-        condition = self.var > self.treshold # boolean array
-        idxs = [i for i in range(len(condition)) if condition[i]]
-        X_trans = X[:,idx]
-        xnames = [dataset._xnames[i] for i in idx]
+        cond = self.var > self.treshold                      # boolean array - if var > treshold then true
+        idxs = [i for i in range(len(cond)) if cond[i]]      # i when cond[i] is true
+        X_trans = X[:,idx]                                   # select indexes of features that match the condition var > treshold    
+        xnames = [dataset.xnames[i] for i in idx]
         if inline: 
             dataset.X = X_trans
             dataset._xnames = xnames
             return dataset 
         else:
+            from .dataset import dataset
+            return Dataset(copy(X_trans), copy(dataset.Y), xnames, copy(dataset.yname))
 
+    
+    
+    def fit_transform(self, dataset, inline=False):
+        self.fit(dataset)
+        return self.transform(dataset, inline=inline)
 
-        # index = []
-        # for i in range(X.shape[1]):
-        #     if self._var[i] > treshold:
-        #         index.append(i)
+class SelectKBest:
 
-    #def fit_transform():
-        #self.fit(dataset)
-        #return.self.transform(dataset, inline=inline)
-
-
-## select K Best
-
-# metodo transform - recebe o dataset e elimina no dataset todas as features que têm uma variância igual ou inferior ao treshold
-# fit_transform
+    def __init__(self, k:int, score_func):
