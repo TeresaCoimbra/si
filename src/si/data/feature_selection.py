@@ -62,7 +62,7 @@ class SelectKBest:
     def transform(self, dataset, inline=False):
         X = dataset.X
         xnames = dataset.xnames
-        feat_select = sorted(np.argsort(self.F)[-self.k:])  # sorted indices of the array
+        feat_select = sorted(np.argsort(self.F)[-self.k:])  # sorted indices of the array, get the last from the list, best k
         x = X[:, feat_select]                               # best features
         xnames = [xnames[feat] for feat in feat_select]
 
