@@ -3,7 +3,7 @@ from si.util.util import l2_distance
 
 class KMeans:
 
-    def __init__(self, k: iter, n_iter=5000):
+    def __init__(self, k: iter, n_iter=100):
         self.k = k
         self.max_iter = n_iter
         self.centroids = None
