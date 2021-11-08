@@ -1,5 +1,6 @@
 import numpy as np
 from si.util.util import l2_distance
+from copy import copy
 
 class KMeans:
 
@@ -15,10 +16,14 @@ class KMeans:
         self._min = np.min(x, axis=0)
         self._max = np.max(x, axis=0)
 
+    # def init_centroids(self, dataset):
+    #     '''Initialize centroids'''
+    #     x = dataset.X
+    #     self.centroids = np.array([np.random.uniform(low=self._min[1], high= self._max[i], size=(self.k,)) for i in range (x.shape[1])]).T
+    
     def init_centroids(self, dataset):
-        '''Initialize centroids'''
-        x = dataset.X
-        self.centroids = np.array([np.random.uniform(low=self._min[1], high= self._max[i], size=(self.k,)) for i in range (x.shape[1])]).T
+        rng = np.random.default_rng()
+        self.centroids = rng.choice(copy(dataset.X), size=self.k, replace=False, p=None, axis=0)
 
     def get_closest_centroid(self, x):
         '''Return the id of the nearest centroid.'''
