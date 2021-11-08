@@ -64,6 +64,20 @@ def l2_distance(x,y):
     dist = np.sqrt(np.sum((x - y) ** 2, axis=1))
     return dist
 
+def train_test_split(dataset, split = 0.8):
+    '''Divisão aleatoria do dataset entre treino e teste
+    split = 0.8 for train'''
+    n = dataset.X.shape[0]     
+    m = int(split*n)  # convert split to int
+    # create a numpy array from 0 to n
+    a = np.arange(n)
+    np.random.shuffle(a)
+
+    from ..data import Dataset
+    train = Dataset(dataset.X[a[:m]], dataset.Y[a[:m]], dataset.xnames, dataset.ynames)
+    test = Dataset(dataset.X[a[m:]], dataset.Y[a[m:]], dataset.xnames, dataset.ynames)
+    return train, test
+
 
 
 
