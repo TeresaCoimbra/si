@@ -1,50 +1,56 @@
 import numpy as np
+from si.util.util import l2_distance
 
 class KMeans:
 
-    def __init__(self, k: iter, n_iter):
+    def __init__(self, k: iter, n_iter=5000):
         self.k = k
         self.max_iter = n_iter
         self.centroids = None
-        #self.distance = l2_distance
+        self.distance = l2_distance
 
     def fit(self, dataset):
-        '''Escolher k centroides de forma aleatoria'''
+        '''Chosing k centroids'''
         x = dataset.X
         self._min = np.min(x, axis=0)
         self._max = np.max(x, axis=0)
 
     def init_centroids(self, dataset):
-        '''Inicialização dos centroides'''
+        '''Initialize centroids'''
         x = dataset.X
-        self.centroids = np.array(
-            [np.random.uniform(
-                low=self._min[1], high= self._max[i], size=(self.k,)
-            ) for i in range (x.shape[1])]).T
+        self.centroids = np.array([np.random.uniform(low=self._min[1], high= self._max[i], size=(self.k,)) for i in range (x.shape[1])]).T
 
     def get_closest_centroid(self, x):
-        '''retorna o id do centroide mais proximo'''
+        '''Return the id of the nearest centroid.'''
         dist = self.distance(x, self.centroids)
-        closest_centroids_index = np.argmin(dist, axis = 0)
+        closest_centroids_index = np.argmin(dist, axis = 0)      # select centroid with the shortest distance
         return closest_centroids_index
 
     def transform(self,dataset):
+
         self.init_centroids(dataset)
-        print(self.centroids)
+        
         X = dataset.X
+
         changed = True
         count = 0
-        old_idxs= np.zeros(x.shape[0])
+        old_idxs= np.zeros(X.shape[0])
+
         while changed or count < self.max_iter:
-            idxs = np.apply_along_axis(self.get_closest_centroid(), axis=0, arr=X.T)
+            idxs = np.apply_along_axis(self.get_closest_centroid, axis=0, arr=X.T)
             cent = []
+
             for i in range(self.k):
                 cent.append(np.mean(X[idxs == i], axis = 0))
-                self.centroids = np.array(cent)
-            count += 1
+            
+            self.centroids = np.array(cent)
+            
+           
             changed = np.all(old_idxs==idxs)
             old_idxs = idxs
-        return self.centroids, idxs
+            count += 1
+        
+        return self.centroids, old_idxs
 
 
     def fit_transform(self, dataset):

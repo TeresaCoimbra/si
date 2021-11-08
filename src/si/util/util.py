@@ -60,8 +60,8 @@ def summary(dataset, format='df'):
         return stats
 
 def l2_distance(x,y):
-    '''Distância Euclidena'''
-    dist = ((x-y)**2).sum(axis=1)
+    '''Distância Euclideana'''
+    dist = np.sqrt(np.sum((x - y) ** 2, axis=1))
     return dist
 
 
