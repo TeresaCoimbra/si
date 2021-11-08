@@ -93,7 +93,9 @@ class Dataset:
     def toDataframe(self):
         """ Converts the dataset into a pandas DataFrame"""
         import pandas as pd
-        if self.Y is not None:
+        if self.hasLabel():
+            if type(self.X) is tuple: 
+                self.X = self.X[0]
             fullds = np.hstack((self.X, self.Y.reshape(len(self.Y), 1)))
             columns = self.xnames[:]+[self.yname]
         else:
