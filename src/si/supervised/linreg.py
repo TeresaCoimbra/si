@@ -11,7 +11,7 @@ class LinearRegression(Model):
         '''
         super(LinearRegression,self).__init__()
         self.gd = gd
-        slef.theta = None
+        self.theta = None
         self.epochs = epochs
         self.lr = lr
 
@@ -31,4 +31,26 @@ class LinearRegression(Model):
         self.theta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(Y)
         
     def train_gd(self,X,Y):
+        m = X.shape[0]
+        n = X.shape[1]
+        self.history = {}
+        self.theta = np.zeros(n)
+        for epoch in range(self.epochs):
+            grad = 1/m*(X.dot(self.theta)-Y).dot(X)            # gradient by definition
+            self.theta -= self.lr*grad
+            self.history[epoch] = [self.theta[:],self.cost()]
+    
+    def predict(self,X):
+        assert self.is_fitted, "Model must be fit before predicting"
+        _x = np.hstack(([1],X))
+        return np.dot(self.theta, _x)
+
+    def cost(self):
+        y_pred = np.dot(self.X, self.theta)
+        return mse(self.Y, y_pred)/2
+
+class LinearRegressionReg(LinearRegression):
+    def __init__(self, gd=False, epochs=100, lr=0.01, lbd=1):
+        '''Linear regression model with L2 regularization'''
         pass
+
