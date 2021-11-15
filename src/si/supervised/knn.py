@@ -4,7 +4,7 @@ from si.util.util import l2_distance, accuracy_score
 
 class KNN(model):
     def __init__(self, num_n, classification = True):
-        super(KNN).__init__()    # instanciar a flag para saber se foi feito o fit ao modelo ou não
+        super(KNN, self).__init__(num_n, classification = True)    # instanciar a flag para saber se foi feito o fit ao modelo ou não
         self.k = num_n
         self.classification = classification
 
@@ -13,7 +13,7 @@ class KNN(model):
         self.is_fitted = True
     
     def get_neighbors(self, x):
-        distances = l2_distance(s, self.dataset.X) # calcular as distâncias de X a todos os outros pontos do dataset usando l2 - euclidian distance
+        distances = l2_distance(x, self.dataset.X) # calcular as distâncias de X a todos os outros pontos do dataset usando l2 - euclidian distance
         sorted_index = np.argstort(distances)      # ordenar para ter os índices que correspondem às melhores distâncias
         # ordenar os índices por ordem crescente de distância
         return sorted_index[:self.num_neighbors]   # selecionar os knn
@@ -31,5 +31,5 @@ class KNN(model):
 
     def cost(self):
         # np.ma with mask
-        y_pred = np.ma.apply_along_axis(self,predict,axis=0,arr=self.dataset.X.T)
+        y_pred = np.ma.apply_along_axis(self.predict,axis=0,arr=self.dataset.X.T)
         return accuracy_score(self.dataset.Y, y_pred)
