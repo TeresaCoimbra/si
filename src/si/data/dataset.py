@@ -105,3 +105,5 @@ class Dataset:
 
     def getXy(self):
         return self.X, self.Y
+
+    
