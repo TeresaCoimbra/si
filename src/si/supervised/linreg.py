@@ -1,3 +1,4 @@
+from numpy.core.numeric import identity
 from .model import Model
 from ..util.metrics import mse
 import numpy as np
@@ -50,7 +51,46 @@ class LinearRegression(Model):
         return mse(self.Y, y_pred)/2
 
 class LinearRegressionReg(LinearRegression):
+
     def __init__(self, gd=False, epochs=100, lr=0.01, lbd=1):
-        '''Linear regression model with L2 regularization'''
-        pass
+        '''Linear regression model with L2 regularization
+        :param bool gd: if True uses gradient descent (GD) to train the model
+                        otherwise closed form lineal algebra. Default False.
+        :param int epochs: Number of epochs for GD
+        :param int lr: Learning rate for GD
+        :param float lbd: lambda for the regularization'''
+        super(LinearRegressionReg, self).__init__(gd=gd, epochs=epochs, lbd=lbd)
+
+    def train_closed(self, X, Y):
+        '''Use closed form linear algebra to fit the model.
+        theta=inv(XT*X+lbd*I')*XT*y'''
+        n=X.shape[1]
+        dentity = np.eye(n)
+        dentity[0,0]=0
+        self.theta = np.linalg.inv(X.T.dot(X)+self.lbd*identity).dot(x.T).dot(Y)
+        self.is_fitted = True
+
+    def train_gd(self, X, Y):
+        '''Uses gradient descent to fit the model'''
+        m = X.shape[0]
+        n = X.shape[1]
+        self.history = {}
+        self.theta = np.zeros(n)
+        lbds = np.full(m, self.lbd)
+        lbds[0] = 0                                        # so that theta(0) is excluded from regularization form
+        for epoch in range(self.epochs):
+            grad = (X.dot(self.theta)-Y).dot(X)            # gradient by definition
+            self.theta -= (self.lr/m) * (lbds+grad)
+            self.history[epoch] = [self.theta[:],self.cost()]
+
+    def predict(self,X):
+        assert self.is_fitted, "Model must be fit before predicting"
+        _x = np.hstack(([1],X))
+        return np.dot(self.theta, _x)
+
+    def cost(self):
+        y_pred = np.dot(self.X, self.theta)
+        return mse(self.Y, y_pred)/2
+
+
 
