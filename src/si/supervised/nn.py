@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import MutableSequence
 from .model import Model
-from scpipy import signal
+from scipy import signal
 
 class Layer(ABC):
 
