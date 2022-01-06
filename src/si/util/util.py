@@ -1,5 +1,6 @@
 import itertools
 import numpy as np
+from numpy.lib.index_tricks import OGridClass
 
 # Y is reserved to idenfify dependent variables
 ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXZ'
@@ -74,8 +75,8 @@ def train_test_split(dataset, split = 0.8):
     np.random.shuffle(a)
 
     from ..data import Dataset
-    train = Dataset(dataset.X[a[:m]], dataset.Y[a[:m]], dataset.xnames, dataset.ynames)
-    test = Dataset(dataset.X[a[m:]], dataset.Y[a[m:]], dataset.xnames, dataset.ynames)
+    train = Dataset(dataset.X[a[:m]], dataset.Y[a[:m]], dataset.xnames, dataset.yname)
+    test = Dataset(dataset.X[a[m:]], dataset.Y[a[m:]], dataset.xnames, dataset.yname)
     return train, test
 
 
@@ -84,4 +85,7 @@ def sigmoid(z):
 
 def CrossValidationScore():
     pass
+
+def add_intersect(X):
+    return np.hstack((np.ones((X.shape[0], 1)), X))
 

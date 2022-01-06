@@ -1,3 +1,5 @@
+import numpy as np
+
 def accuracy_score(y_true, y_pred):
     '''Class performance metric that computes the accuracy and y_pred'''
     correct = 0
@@ -7,21 +9,33 @@ def accuracy_score(y_true, y_pred):
     accuracy = correct/len(y_true)
     return accuracy
 
-def mse(y_true, y_pred, squared = True):
-    '''Mean squared error regression loss funcion.
-    Parameters
+# def mse(y_true, y_pred, squared = True):
+#     '''Mean squared error regression loss funcion.
+#     Parameters
     
-    :param numpy.array y_true: array-like of shape(n_samples,)
-        Ground truth (correct) target values
-    :param numpy.array y_pred: array-like of shape(n_samples,)
-        Estimated target values
-    _param bool squared: If True resturns MSE, if false returns RMSE'''
-    y_true = np.array(y_true)
-    y_pred = np.array(y_pred)
-    errors = np.average((y_true-y_pred)**2, axis = 0)
-    if not squared:
-        errors = np.sqrt(errors)
-    return np.average(errors)
+#     :param numpy.array y_true: array-like of shape(n_samples,)
+#         Ground truth (correct) target values
+#     :param numpy.array y_pred: array-like of shape(n_samples,)
+#         Estimated target values
+#     _param bool squared: If True resturns MSE, if false returns RMSE'''
+#     y_true = np.array(y_true)
+#     y_pred = np.array(y_pred)
+#     errors = np.average((y_true-y_pred)**2, axis = 0)
+#     if not squared:
+#         errors = np.sqrt(errors)
+#     return np.average(errors)
+
+def mse(y_true, y_pred):
+    """
+    Mean squared error regression loss function.
+    Parameters
+    :param numpy.array y_true: array-like of shape (n_samples,)
+        Ground truth (correct) target values.
+    :param numpy.array y_pred: array-like of shape (n_samples,)
+        Estimated target values.
+    :returns: loss (float) A non-negative floating point value (the best value is 0.0).
+    """
+    return np.mean(np.power(y_true-y_pred, 2))
     
 def mse_prime(y_true, y_pred):
     return 2*(y_pred-y_true)/y_true.size
