@@ -1,8 +1,9 @@
 import numpy as np
 from .model import Model
-from si.util.util import l2_distance, accuracy_score
+from si.util.util import l2_distance
+from si.util.metrics import accuracy_score
 
-class KNN(model):
+class KNN(Model):
     def __init__(self, num_n, classification = True):
         super(KNN, self).__init__(num_n, classification = True)    # instanciar a flag para saber se foi feito o fit ao modelo ou não
         self.k = num_n

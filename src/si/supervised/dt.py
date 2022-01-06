@@ -1,5 +1,5 @@
 from .model import Model
-from ..util import accuracy_score
+from ..util.metrics import accuracy_score
 import numpy as np
 
 
@@ -145,14 +145,14 @@ class DecisionTree(Model):
 
     def fit(self, dataset):
         self.dataset = dataset
-        X, y = dataset.getXy()
+        X, Y = dataset.getXy()
         # the dataset classes
-        self.classes = np.unique(y)
+        self.classes = np.unique(Y)
         # root node creation
         self.Tree = Node()
         self.Tree.depth = 1
-        self.Tree.probas = self.nodeProbas(y)
-        self.buildDT(X, y, self.Tree)
+        self.Tree.probas = self.nodeProbas(Y)
+        self.buildDT(X, Y, self.Tree)
         self.is_fitted = True
 
     def predictSample(self, x, node):
@@ -175,10 +175,10 @@ class DecisionTree(Model):
         pred = np.argmax(self.predictSample(x, self.Tree))
         return pred
 
-    def cost(self, X=None, y=None):
+    def cost(self, X=None, Y=None):
         X = X if X is not None else self.dataset.X
-        y = y if y is not None else self.dataset.y
+        Y = Y if Y is not None else self.dataset.Y
 
         y_pred = np.ma.apply_along_axis(self.predict,
                                         axis=0, arr=X.T)
-        return accuracy_score(y, y_pred)
+        return accuracy_score(Y, y_pred)
