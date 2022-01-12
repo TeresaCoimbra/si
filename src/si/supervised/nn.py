@@ -1,5 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import MutableSequence
+
+from numpy.core.fromnumeric import size, transpose
+from scipy.signal.ltisys import LinearTimeInvariant
 from .model import Model
 from scipy import signal
 import numpy as np
@@ -125,5 +128,86 @@ class NN(Model):
         y = y if y is not None else self.dataset.y
         output = self.predict(X)
         return self.loss(y, output)
-        
+
+class Flatten(Layer):
+    def __init__(self, input_layer):
+        super().__init__()
+
+    def forward(self, input):
+        pass
+
+    def backward(self, output_error, learning_rate):
+        fr, fc, in_ch, out_ch = self.weights.shape
+        p = self.padding
+        db = np.sum(output_error, axis = (0,1,2))
+        db = db.reshape(out_ch,)
+        dout_reshaped = output_error.transpose(1,2,3,0).reshape(out_ch, -1)
+        dW = dout_reshaped @ self.X_col.T
+        dW = dW.reshape(self.weights.shape)
+
+        W_reshape = self.weights.reshape(out_ch, -1)
+        dX_col = W_reshape.T @ dout_reshaped
+        input_error = col2im(dX_col, self.X_shape, self.weights.shape, (p,p,p,p),self.stride)
+
+        self.weights -= learning_rate*dW
+        self.bias -= learning_rate*db
+        return input_error 
+
+    def predict(self, input_data):
+        assert self.is_fitted, 'Model must be fit before predicting'
+        output = input_data
+        for layer in self.layers:
+            output = layer.forward(output)
+        return output
     
+    def cost(self, X=None, y=None):
+        assert self.is_fitted, 'Model must be fit before predicting'
+        X = X if X is not None else self.dataset.X
+        y = y if y is not None else self.dataset.y
+        output = self.predict(X)
+        return self.loss(y, output)
+        
+
+
+class Pooling2D(Layer):
+    def __init__(self, size, stride):
+        self.size = size
+        self.stride = stride
+
+    def pool(X_col):
+        raise NotImplementedError
+
+    def dpool(dX_col,dout_col,pool_cache):
+        raise NotImplementedError
+    
+    def forward(self, input):
+        self.X_sahpe = input.shape
+        n, h, w, d = input.shape #n imagens, altura, comprimento, n canais
+        # calc output size
+        h_out = (h-self.size)/self.stride + 1
+        w_out = (w-self.size)/self.stride + 1
+        if not w_out.is_integer() or not h_out.is_integer():
+            raise Exception('Invalid output dimension')
+        
+        h_out,w_out = int(h_out), int(w_out)
+
+        X_reshaped = input.reshape(n*d,1,h,w)
+        self.X_col = im2col(X_reshaped, self.size, self.size, padding=0, stride=self.stride) ##
+        # falta código
+        out, self.max_idx = self.pool(self.X_cool)
+        out = out.reshape(h_out,w_out,n,d)
+        out = out.transpose(2,3,0,1)
+        return out
+
+    def backward(self, output_error, learning_rate):
+        n, w, h, d = self.Z_shape
+        dX_col = np.zeros_like(self.X_col)
+        dout_col = output_error.transpose(2,3,0,1).ravel()
+        dX = self.dpool(dX_col, dout_col, self.max_idx)
+        dX = col2im(dX_col, (n*d, 1, h,w), self.size, self.size, padding =0, stride=self.stride)
+        dX=dX.reshape(self.X_shape)
+
+        return dx
+
+
+
