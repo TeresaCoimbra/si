@@ -64,7 +64,11 @@ def l2_distance(x,y):
     '''Distância Euclideana'''
     dist = np.sqrt(np.sum((x - y) ** 2, axis=1))
     return dist
-
+def manhattan(x, y):
+    dist=np.abs(x-y)
+    dist=np.sum(dist)
+    return dist
+    
 def train_test_split(dataset, split = 0.8):
     '''Divisão aleatoria do dataset entre treino e teste
     split = 0.8 for train'''

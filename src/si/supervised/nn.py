@@ -207,7 +207,7 @@ class Pooling2D(Layer):
         dX = col2im(dX_col, (n*d, 1, h,w), self.size, self.size, padding =0, stride=self.stride)
         dX=dX.reshape(self.X_shape)
 
-        return dx
+        return dX
 
 
 
