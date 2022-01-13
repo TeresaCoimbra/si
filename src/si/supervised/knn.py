@@ -14,7 +14,8 @@ class KNN(Model):
         self.is_fitted = True
     
     def get_neighbors(self, x):
-        distances = l2_distance(x, self.dataset.X) # calcular as distâncias de X a todos os outros pontos do dataset usando l2 - euclidian distance
+        idxs = np.apply_along_axis(self.dataset.X, axis=0, arr=self.dataset.X)
+        distances = l2_distance(x, idxs) # calcular as distâncias de X a todos os outros pontos do dataset usando l2 - euclidian distance
         sorted_index = np.argstort(distances)      # ordenar para ter os índices que correspondem às melhores distâncias
         # ordenar os índices por ordem crescente de distância
         return sorted_index[:self.num_neighbors]   # selecionar os knn
