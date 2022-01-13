@@ -1,11 +1,15 @@
 from abc import ABC, abstractmethod
 from typing import MutableSequence
+import numpy as np
 
 from numpy.core.fromnumeric import size, transpose
 from scipy.signal.ltisys import LinearTimeInvariant
+
 from .model import Model
 from scipy import signal
-import numpy as np
+
+from si.util.metrics import mse, mse_prime
+from si.util.im2col import pad2D, im2col, col2im
 
 class Layer(ABC):
 
@@ -86,8 +90,11 @@ class NN(Model):
         self.layers = []
         self.loss = mse
         self.loss_prime = mse_prime
+    
+    def add(self, layer):
+        self.layers.append(layer)
         
-    def fit(self):
+    def fit(self, dataset):
         X, y = dataset.getXy()
         self.dataset = dataset
         self.history = dict()
@@ -99,6 +106,7 @@ class NN(Model):
             
             # backward propagation
             error = self.loss_prime(y, output)  # error based on previous predictions
+
             for layer in reversed(self.layers): # passing the error in an inverse order
                 error = layer.backward(error, self.lr)
             
@@ -111,9 +119,6 @@ class NN(Model):
         if not self.verbose:
             print(f"error={err}")
         self.is_fitted = True
-    
-    def add(self, layer):
-        self.layers.append(layer)
     
     def predict(self, input_data):
         assert self.is_fitted, 'Model must be fit'
@@ -134,7 +139,45 @@ class Flatten(Layer):
         super().__init__()
 
     def forward(self, input):
-        pass
+        self.input_shape= input.shape
+        output = input.reshape(input.shape[0],-1)
+        return output
+    
+    def backward(self,output_error, lr):
+        return output_error.reshape(self.input_shape)
+
+class Conv2D(Layer):
+    def __init__(self, input_shape,kernel_shape, layer_depth, stride = 1, padding = 0):
+        self.input_shape = input_shape
+        self.in_ch = input_shape[2]
+        self.out_ch = layer_depth
+        self.stride = stride
+        self.padding = padding
+        self.weights = np.random.rand(kernel_shape[0],kernel_shape[1],
+                                      self.in_ch, self.out_ch) -0.5
+
+        self.bias = np.zeros((self.out_ch,1))
+
+    def forward(self,input_data):
+        s = self.stride
+        self.X_shape = input_data.shape
+        _, p = pad2D(input_data, self.padding, self.weights.shape[:2], s)
+
+        pr1, pr2, pc1, pc2 = p
+        fr, fc, in_ch, out_ch = self.weights.shape
+        n_ex, in_rows, in_cols, in_ch = input_data.shape
+
+        # compute the dimensions of the convolution output
+        out_rows = int((in_rows + pr1 + pr2-fr) / s + 1)
+        out_cols = int((in_cols + pc1 + pc2 -fc) / s + 1)
+
+        # convert X and w into the appropriate 2D matrices and take their product
+        self.X_col, _ = im2col(input_data, self.weights.shape, p, s)
+        W_col = self.weights.transpose(3, 2, 0, 1).reshape(out_ch, -1)
+
+        output_data = (W_col @ self.X_col + self.bias).reshape(out_ch, out_rows, out_cols, n_ex).transpose(3, 1, 2, 0)
+        return output_data
+
 
     def backward(self, output_error, learning_rate):
         fr, fc, in_ch, out_ch = self.weights.shape
@@ -208,6 +251,31 @@ class Pooling2D(Layer):
         dX=dX.reshape(self.X_shape)
 
         return dX
+class MaxPoling(Layer):
+    def __init__(self, region_shape):
+        self.region_shape = region_shape
+        self.region_h, self.region_w = region_shape
+
+    def forward(self,input_data):
+        self.X_input = input_data
+        _, self.input_h, self.input_w, self.input_f = input_data.shape
+
+        self.out_h = self.input_h // self.region_h
+        self.out_w = self.input_w // self.region_w
+        output = np.zeros((self.out_h, self.out_w, self.input_f))
+
+        for image, i, j in self.iterate_regions():
+            output[i, j] = np.amax(image)
+        return output
+
+    def backward(self,output_error, lr):
+        pass
+
+    def iterate_regions(self):
+        for i in range(self.out_h):
+            for j in range(self.out_w):
+                image = self.X_input[(i * self.region_h): (i * self.region_h + 2), (j * self.region_h):(j * self.region_h + 2)]
+                yield image, i, j
 
 
 
