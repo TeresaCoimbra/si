@@ -135,8 +135,6 @@ class NN(Model):
         return self.loss(y, output)
 
 class Flatten(Layer):
-    def __init__(self, input_layer):
-        super().__init__()
 
     def forward(self, input):
         self.input_shape= input.shape
