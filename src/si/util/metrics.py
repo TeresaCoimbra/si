@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 def accuracy_score(y_true, y_pred):
     '''Class performance metric that computes the accuracy and y_pred'''
@@ -53,8 +54,8 @@ def r2_score(y_true, y_pred):
 class ConfusionMatrix:
 
     def __init__(self, true_y, predict_y):
-        '''Confusion Matrix implementation.
-        Evaluation of the performance model by comparing the true vs the predicted values.'''
+        '''Confusion Matrix implementation for the
+        evaluation of the performance model by comparing the true vs the predicted values.'''
         self.true_y = np.array(true_y)
         self.predict_y = np.array(predict_y)
         self.conf_matrix = None
@@ -65,7 +66,7 @@ class ConfusionMatrix:
     
     def toDataframe(self):
         return pd.DtaFrame(self.build_matrix())
-        
+
 
 
 

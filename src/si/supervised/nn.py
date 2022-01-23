@@ -46,14 +46,17 @@ class Dense(Layer):
         return self.output
     
     def backward(self, output_error, learning_rate):
-        '''Computes dE/dW, dE/dB for a given output erros = dE/dY
+        '''Computes dE/dW, dE/dB for a given output error = dE/dY
         Returns input error = dE/dX to feed the previous layer'''
         # computing the weights error: dE/dW = X.T*dE/dY
         weights_error = np.dot(self.input.T, output_error) 
+
         # bias error dE/dB=dE/dY
         bias_error = np.sum(output_error, axis=0)
+
         # error dE/dX to pass on to the previous layer
         input_error = np.dot(output_error, self.weights.T)
+
         # update parameters
         self.weights -= learning_rate*weights_error
         self.bias -= learning_rate*bias_error
@@ -95,7 +98,7 @@ class NN(Model):
         self.layers.append(layer)
         
     def fit(self, dataset):
-        X, y = dataset.getXy()
+        X, Y = dataset.getXy()
         self.dataset = dataset
         self.history = dict()
         for epoch in range(self.epochs):
@@ -105,19 +108,18 @@ class NN(Model):
                 output = layer.forward(output)
             
             # backward propagation
-            error = self.loss_prime(y, output)  # error based on previous predictions
+            error = self.loss_prime(Y, output)  # error based on previous predictions
 
             for layer in reversed(self.layers): # passing the error in an inverse order
                 error = layer.backward(error, self.lr)
             
             # calculate average error on all samples
-            err = self.loss(y, output)
+            err = self.loss(Y, output)
             self.history[epoch] = err
             if self.verbose:  # add parameter to print results in epochs
                 print(f"epoch{epoch +1}/{self.epochs} error={err}")
-                
-        if not self.verbose:
-            print(f"error={err}")
+            else:
+                print("\r", f"epoch {epoch +1}/{self.epochs} error = {err}")
         self.is_fitted = True
     
     def predict(self, input_data):
@@ -149,7 +151,7 @@ class Conv2D(Layer):
         self.input_shape = input_shape
         self.in_ch = input_shape[2]
         self.out_ch = layer_depth
-        self.stride = stride
+        self.stride = stride             #step of the convolution
         self.padding = padding
         self.weights = np.random.rand(kernel_shape[0],kernel_shape[1],
                                       self.in_ch, self.out_ch) -0.5
@@ -180,8 +182,10 @@ class Conv2D(Layer):
     def backward(self, output_error, learning_rate):
         fr, fc, in_ch, out_ch = self.weights.shape
         p = self.padding
+
         db = np.sum(output_error, axis = (0,1,2))
         db = db.reshape(out_ch,)
+
         dout_reshaped = output_error.transpose(1,2,3,0).reshape(out_ch, -1)
         dW = dout_reshaped @ self.X_col.T
         dW = dW.reshape(self.weights.shape)
@@ -192,6 +196,7 @@ class Conv2D(Layer):
 
         self.weights -= learning_rate*dW
         self.bias -= learning_rate*db
+
         return input_error 
 
     def predict(self, input_data):
@@ -233,8 +238,8 @@ class Pooling2D(Layer):
         h_out,w_out = int(h_out), int(w_out)
 
         X_reshaped = input.reshape(n*d,1,h,w)
-        self.X_col = im2col(X_reshaped, self.size, self.size, padding=0, stride=self.stride) ##
-        # falta código
+        self.X_col = im2col(X_reshaped, self.size, self.size, padding=0, stride=self.stride) 
+      
         out, self.max_idx = self.pool(self.X_cool)
         out = out.reshape(h_out,w_out,n,d)
         out = out.transpose(2,3,0,1)
@@ -249,10 +254,16 @@ class Pooling2D(Layer):
         dX=dX.reshape(self.X_shape)
 
         return dX
-class MaxPoling(Layer):
+class MaxPoling(Pooling2D):
     def __init__(self, region_shape):
+
         self.region_shape = region_shape
         self.region_h, self.region_w = region_shape
+
+    def pool(X_col):
+        max_idx = np.argmax(X_col, axis=0)
+        out = X_col[max_idx, range(max_idx.size)]
+        return out, max_idx
 
     def forward(self,input_data):
         self.X_input = input_data
