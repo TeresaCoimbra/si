@@ -94,6 +94,7 @@ def _im2col_indices(X_shape, fr, fc, p, s):
 
 
 def im2col(X, W_shape, pad, stride):
+    #split the input image into a column matrix
     fr, fc, n_in, n_out = W_shape
     s, p = stride, pad
     n_ex, in_rows, in_cols, n_in = X.shape
@@ -114,7 +115,16 @@ def im2col(X, W_shape, pad, stride):
 
 
 def col2im(X_col, X_shape, W_shape, pad, stride):
+    #columns to image
     s = stride
+
+    if isinstance(pad, int): # if pad is int
+        pad = (pad, pad, pad, pad)
+
+    if isinstance(pad, tuple): 
+        if len(pad) == 2:
+            pad = (pad[0], pad[0], pad[1], pad[1])
+
     pr1, pr2, pc1, pc2 = pad
     fr, fc, n_in, n_out = W_shape
     n_ex, in_rows, in_cols, n_in = X_shape

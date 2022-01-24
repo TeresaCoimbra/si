@@ -29,7 +29,7 @@ def cross_entropy(y_true, y_pred):
     return -(y_true * np.log(y_pred)).sum()
 
 def cross_entropy_prime(y_true, y_pred):
-    return y_pred - y_true
+    return y_pred-y_true
 
 def r2_score(y_true, y_pred):
     """

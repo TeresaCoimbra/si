@@ -98,28 +98,34 @@ class NN(Model):
         self.layers.append(layer)
         
     def fit(self, dataset):
-        X, Y = dataset.getXy()
+        X, y = dataset.getXy()
         self.dataset = dataset
         self.history = dict()
+
         for epoch in range(self.epochs):
             output = X
+
             # forward propagation
             for layer in self.layers:
+                #print(layer)
                 output = layer.forward(output)
-            
+            #print(y.shape)
+
             # backward propagation
-            error = self.loss_prime(Y, output)  # error based on previous predictions
+            error = self.loss_prime(y, output)  # error based on previous predictions
 
             for layer in reversed(self.layers): # passing the error in an inverse order
                 error = layer.backward(error, self.lr)
             
             # calculate average error on all samples
-            err = self.loss(Y, output)
+            err = self.loss(y, output)
             self.history[epoch] = err
+
             if self.verbose:  # add parameter to print results in epochs
                 print(f"epoch{epoch +1}/{self.epochs} error={err}")
-            else:
-                print("\r", f"epoch {epoch +1}/{self.epochs} error = {err}")
+
+        if not self.verbose:
+            print(f"error={err}")
         self.is_fitted = True
     
     def predict(self, input_data):
@@ -135,6 +141,10 @@ class NN(Model):
         y = y if y is not None else self.dataset.y
         output = self.predict(X)
         return self.loss(y, output)
+    
+    def useLoss(self, func, func2):
+        """Determines the loss functions to use."""
+        self.loss, self.loss_prime = func, func2
 
 class Flatten(Layer):
 
@@ -143,7 +153,7 @@ class Flatten(Layer):
         output = input.reshape(input.shape[0],-1)
         return output
     
-    def backward(self,output_error, lr):
+    def backward(self, output_error, lr):
         return output_error.reshape(self.input_shape)
 
 class Conv2D(Layer):
@@ -216,89 +226,59 @@ class Conv2D(Layer):
 
 
 class Pooling2D(Layer):
-    def __init__(self, size, stride):
+    def __init__(self, size=2, stride=1):
         self.size = size
         self.stride = stride
 
-    def pool(X_col):
+    def pool(self, X_col):
         raise NotImplementedError
 
-    def dpool(dX_col,dout_col,pool_cache):
+    def dpool(self, dX_col,dout_col,pool_cache):
         raise NotImplementedError
     
     def forward(self, input):
-        self.X_sahpe = input.shape
-        n, h, w, d = input.shape #n imagens, altura, comprimento, n canais
+        self.X_shape = input.shape
+        n, h, w, d = input.shape #n imagens, h altura, w comprimento, d n canais
+        
         # calc output size
         h_out = (h-self.size)/self.stride + 1
         w_out = (w-self.size)/self.stride + 1
+
         if not w_out.is_integer() or not h_out.is_integer():
             raise Exception('Invalid output dimension')
         
         h_out,w_out = int(h_out), int(w_out)
-
-        #X_reshaped = input.reshape(n*d,1,h,w)
-        X_reshaped = input.reshape()
-        self.X_col = im2col(X_reshaped, self.size, self.size, padding=0, stride=self.stride) 
+        X_reshaped = input.reshape(n*d,h,w,1)
+       
+        self.X_col, _ = im2col(X_reshaped, (self.size, self.size,1,1), pad=0, stride=self.stride) 
       
-        out, self.max_idx = self.pool(self.X_cool)
+        out, self.max_idx = self.pool(self.X_col)
         out = out.reshape(h_out,w_out,n,d)
-        out = out.transpose(2,3,0,1)
+        out = out.transpose(2,0,1,3)
         return out
 
     def backward(self, output_error, learning_rate):
-        n, w, h, d = self.Z_shape
+        n, w, h, d = self.X_shape
         dX_col = np.zeros_like(self.X_col)
-        dout_col = output_error.transpose(2,3,0,1).ravel()
+        dout_col = output_error.transpose(1,2,3,0).ravel()
+
         dX = self.dpool(dX_col, dout_col, self.max_idx)
-        dX = col2im(dX_col, (n*d, 1, h,w), self.size, self.size, padding =0, stride=self.stride)
+        dX = col2im(dX, (n*d,h,w,1), (self.size, self.size,1,1), pad=0, stride=self.stride)
         dX=dX.reshape(self.X_shape)
 
         return dX
-class MaxPoling(Pooling2D):
-    def __init__(self, region_shape):
 
-        self.region_shape = region_shape
-        self.region_h, self.region_w = region_shape
-
-    def pool(X_col):
+class MaxPooling2D(Pooling2D):
+    
+    def pool(self, X_col):
+        out = np.amax(X_col, axis = 0)  # maximum of an array
         max_idx = np.argmax(X_col, axis=0)
-        out = X_col[max_idx, range(max_idx.size)]
         return out, max_idx
 
-    def dpool(dX_col, dout_col, pool_cache):
-        dX_col[pool_cache, range(dout_col.size)]=dout_col
-        return dX_col
+    def dpool(self, dX_col, dout_col, pool_cache):
+        for x, indx in enumerate(pool_cache):
+            dX_col[indx, x] = 1
+        return dX_col * dout_col
 
-    def forward(self,input_data):
-        self.X_input = input_data
-        _, self.input_h, self.input_w, self.input_f = input_data.shape
-
-        self.out_h = self.input_h // self.region_h
-        self.out_w = self.input_w // self.region_w
-        output = np.zeros((self.out_h, self.out_w, self.input_f))
-
-        for image, i, j in self.iterate_regions():
-            output[i, j] = np.amax(image)
-        return output
-
-    def backward(self,output_error, lr):
-        n, w, h, d = self.X_shape
-
-        dX_col = np.zeros_like(self.X_shape)
-        dout_col = output_error.transpose(2,3,0,1).ravel()
-
-        dX = self.dpool(dX_col, dout_col, self.max_idx)
-        dX = col2im(dX_col, (n*d, 1, h, w), pad=0, stride= self.stride)
-        #dX = col2im(dX_col, self.X_shape,(n*d,1,h,w), pad=0, stride = self.stride) # rearrange matrix columns into blocks 
-        dX = dX.reshape(self.X_shape)
-
-
-    def iterate_regions(self):
-        for i in range(self.out_h):
-            for j in range(self.out_w):
-                image = self.X_input[(i * self.region_h): (i * self.region_h + 2), (j * self.region_h):(j * self.region_h + 2)]
-                yield image, i, j
-
-
+   
 
